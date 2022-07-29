@@ -45,10 +45,10 @@ parentPort?.on('message', (parameters: {
     }) => {
         console.log(msg);
         // preprocessing
+        msg.parameters.title = title;
         switch(msg.action) {
             case 'serverStarted': {
                 msg.parameters.port = battlePort;
-                msg.parameters.title = title;
                 parentPort?.postMessage(msg);
                 break;
             }
