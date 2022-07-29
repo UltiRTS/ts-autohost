@@ -1,6 +1,7 @@
 import { EngineListener } from "./lib/listener";
 import { EngineBridger, Player } from "./lib/engine";
 import {parentPort} from 'worker_threads'
+import {AIHoster} from './lib/aiHoster';
 
 function getAllyTeamCount(parameters: {[key: string]: any}) {
     const teams= new Set();
@@ -25,14 +26,26 @@ parentPort?.on('message', (parameters: {
 
     const listener = new EngineListener(listenerPort);
     const engine = new EngineBridger(process.cwd(), [])
+    const aiHoster = new AIHoster('127.0.0.1', battlePort, 'aiHoster', '');
     const title = parameters.title;
+
+    const aiHosterIndex = Object.keys(parameters.team).length;
+    const aiHosterPlayer: Player = {
+        index: aiHosterIndex,
+        isAI: false,
+        isChicken: false,
+        isSpectator: true,
+        team: 0
+    }
+
+    parameters.team['aiHoster'] = aiHosterPlayer;
+    parameters.aiHosters.push(aiHosterIndex);
 
     listener.on('autohostMsg', (msg: {
         action: string,
         parameters: { [key: string]: any }
     }) => {
         if(msg.action === 'autohostStarted') {
-            parameters.aiHosters = [0];
             console.log(parameters.map);
             engine.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters);
             engine.launchGame()
@@ -45,11 +58,13 @@ parentPort?.on('message', (parameters: {
     }) => {
         console.log(msg);
         // preprocessing
+        msg.parameters.title = title;
+
         switch(msg.action) {
             case 'serverStarted': {
                 msg.parameters.port = battlePort;
-                msg.parameters.title = title;
                 parentPort?.postMessage(msg);
+                aiHoster.scripGenNStart();
                 break;
             }
             case 'serverEnding': {
