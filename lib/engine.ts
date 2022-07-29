@@ -74,7 +74,7 @@ export class EngineBridger {
         pl.addFromDict({
           Name: id,
           Spectator: 1,
-          Team: this.players[id]['index'],
+          // Team: this.players[id]['index'],
           CountryCode: '??',
           Rank: 0,
           defaultLeader,

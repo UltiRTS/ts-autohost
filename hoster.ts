@@ -47,7 +47,7 @@ parentPort?.on('message', (parameters: {
     }) => {
         if(msg.action === 'autohostStarted') {
             console.log(parameters.map);
-            engine.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters)+1, parameters.map, parameters.aiHosters);
+            engine.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters);
             engine.launchGame()
         }
     })
