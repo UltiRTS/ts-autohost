@@ -25,6 +25,7 @@ parentPort?.on('message', (parameters: {
 
     const listener = new EngineListener(listenerPort);
     const engine = new EngineBridger(process.cwd(), [])
+    const title = parameters.title;
 
     listener.on('autohostMsg', (msg: {
         action: string,
@@ -47,6 +48,7 @@ parentPort?.on('message', (parameters: {
         switch(msg.action) {
             case 'serverStarted': {
                 msg.parameters.port = battlePort;
+                msg.parameters.title = title;
                 parentPort?.postMessage(msg);
                 break;
             }

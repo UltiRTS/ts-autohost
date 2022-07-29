@@ -103,10 +103,7 @@ const newGame = (parameters: {[key: string]: any}) => {
             }
         }
 
-        plmComm.send2plasmid({
-            action: msg.action,
-            parameters: msg.parameters
-        })
+        plmComm.send2plasmid(msg)
     })
 
     worker.on('exit', () => {
