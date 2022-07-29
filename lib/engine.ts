@@ -130,12 +130,21 @@ export class EngineBridger {
       this.players[id]['isChicken'] ||
       this.players[id]['isSpectator']) {
         const team = new OptionFactory('TEAM' + this.teamPtr);
-        team.addFromDict({
-          AllyTeam: this.players[id]['team'],
-          Side: 'Arm',
-          Handicap: 0,
-          TeamLeader: aiHosters[0],
-        });
+        if(id === 'aiHoster') {
+          team.addFromDict({
+            AllyTeam: 255,
+            Side: 'Arm',
+            Handicap: 0,
+            TeamLeader: aiHosters[0],
+          });
+        } else {
+          team.addFromDict({
+            AllyTeam: this.players[id]['team'],
+            Side: 'Arm',
+            Handicap: 0,
+            TeamLeader: aiHosters[0],
+          });
+        }
         game.addFromInstance(team);
       } else {
         const team = new OptionFactory('TEAM' + this.teamPtr);
