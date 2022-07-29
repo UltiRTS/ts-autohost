@@ -64,7 +64,7 @@ parentPort?.on('message', (parameters: {
             case 'serverStarted': {
                 msg.parameters.port = battlePort;
                 parentPort?.postMessage(msg);
-                aiHoster.scripGenNStart();
+                if(aiHoster.started === false) aiHoster.scripGenNStart();
                 break;
             }
             case 'serverEnding': {

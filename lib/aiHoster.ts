@@ -5,6 +5,7 @@ export class AIHoster {
     hostPort: number;
     aiHoster: ChildProcess | null = null;
     script: string = '';
+    started: boolean = false;
 
   constructor(hostIP: string, hostPort: number, playerName: string, engineToken: string) {
     this.hostPort = hostPort;
@@ -23,6 +24,7 @@ export class AIHoster {
   /**
    */
   scripGenNStart() {
+    this.started = true;
     console.log('generating script');
     const scriptPath = `/tmp/aiHoster${this.hostPort}.txt`;
     fs.writeFileSync(scriptPath, this.script);
