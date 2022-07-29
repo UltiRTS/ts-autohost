@@ -132,7 +132,7 @@ export class EngineBridger {
         const team = new OptionFactory('TEAM' + this.teamPtr);
         if(id === 'aiHoster') {
           team.addFromDict({
-            AllyTeam: 255,
+            AllyTeam: this.numTeams-1,
             Side: 'Arm',
             Handicap: 0,
             TeamLeader: aiHosters[0],
@@ -170,9 +170,9 @@ export class EngineBridger {
       game.addFromInstance(allyTeam);
       this.teamPtr++;
     }
-    const allyTeam = new OptionFactory('ALLYTEAM' + 255);
-    allyTeam.addFromDict({NumAllies: 0});
-    game.addFromInstance(allyTeam);
+    // const allyTeam = new OptionFactory('ALLYTEAM' + 255);
+    // allyTeam.addFromDict({NumAllies: 0});
+    // game.addFromInstance(allyTeam);
 
     this.teamPtr = 0;
 
