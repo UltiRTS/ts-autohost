@@ -43,6 +43,14 @@ parentPort?.on('message', (parameters: {
         parameters: { [key: string]: any }
     }) => {
         console.log(msg);
+        // preprocessing
+        switch(msg.action) {
+            case 'serverStarted': {
+                msg.parameters.port = battlePort;
+                break;
+            }
+        }
+
         parentPort?.postMessage(msg);
     })
 })
