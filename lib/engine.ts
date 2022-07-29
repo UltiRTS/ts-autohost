@@ -170,6 +170,9 @@ export class EngineBridger {
       game.addFromInstance(allyTeam);
       this.teamPtr++;
     }
+    const allyTeam = new OptionFactory('ALLYTEAM' + 255);
+    allyTeam.addFromDict({NumAllies: 0});
+    game.addFromInstance(allyTeam);
 
     this.teamPtr = 0;
 
