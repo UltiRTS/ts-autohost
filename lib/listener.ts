@@ -162,21 +162,12 @@ export class EngineListener extends EventEmitter {
     console.log(`server bound to port ${port}`);
   }
 
-  /**
-   *
-   * @param {string} things2send
-   * @description message to relay
-   */
   send2springEngine(things2send: string) {
     if(this.server === null) return;
 
     this.server.send(things2send);
   }
 
-  /**
-   *
-   * @param {object} parameters JSON object
-   */
   midJoin(parameters: {[key: string]: any}) {
     if(this.server === null) return;
 
@@ -187,5 +178,11 @@ export class EngineListener extends EventEmitter {
 
     this.server.send('/adduser ' +
       playerName + ' ' + token + ' ' + isSpec + ' ' + team);
+  }
+
+  close() {
+    if(this.server === null) return;
+
+    this.server.close();
   }
 }

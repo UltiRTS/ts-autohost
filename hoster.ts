@@ -47,11 +47,16 @@ parentPort?.on('message', (parameters: {
         switch(msg.action) {
             case 'serverStarted': {
                 msg.parameters.port = battlePort;
+                parentPort?.postMessage(msg);
+                break;
+            }
+            case 'serverEnding': {
+                parentPort?.postMessage(msg);
+                listener.close();
                 break;
             }
         }
 
-        parentPort?.postMessage(msg);
     })
 })
 

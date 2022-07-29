@@ -95,9 +95,17 @@ const newGame = (parameters: {[key: string]: any}) => {
         action: string,
         parameters: { [key: string]: any }
     }) => {
+        console.log('worker message', msg);
+        switch(msg.action) {
+            case 'serverEnding': {
+                delete workerPool[id];
+                break;
+            }
+        }
+
         plmComm.send2plasmid({
             action: msg.action,
-            parameters: parameters
+            parameters: msg.parameters
         })
     })
 
