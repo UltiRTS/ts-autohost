@@ -65,6 +65,13 @@ plmComm.on('plasmidRequest', async (msg: {
     switch(msg.action) {
         case 'startGame': {
             const parameters = msg.parameters;
+            if(workerPool[parameters.id]) {
+                plmComm.send2plasmid({
+                    action: 'workerExists',
+                    parameters: {}
+                })
+                return;
+            }
             infoPool[parameters.id] = msg;
 
             const mapId = parameters.mapId;
