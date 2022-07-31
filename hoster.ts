@@ -1,6 +1,6 @@
 import { EngineListener } from "./lib/listener";
 import { EngineBridger, Player } from "./lib/engine";
-import {parentPort} from 'worker_threads'
+import {parentPort,} from 'worker_threads'
 
 function getAllyTeamCount(parameters: {[key: string]: any}) {
     const teams= new Set();

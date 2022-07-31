@@ -68,7 +68,9 @@ plmComm.on('plasmidRequest', async (msg: {
             if(workerPool[parameters.id]) {
                 plmComm.send2plasmid({
                     action: 'workerExists',
-                    parameters: {}
+                    parameters: {
+                        title: parameters.title,
+                    }
                 })
                 return;
             }
@@ -105,7 +107,7 @@ const newGame = (parameters: {[key: string]: any}) => {
         console.log('worker message', msg);
         switch(msg.action) {
             case 'serverEnding': {
-                delete workerPool[id];
+                worker.emit('exit');
                 break;
             }
         }
