@@ -100,14 +100,15 @@ const newGame = (parameters: {[key: string]: any}) => {
         worker.postMessage(parameters)
     })
 
-    worker.on('message', (msg: {
+    worker.on('message', async (msg: {
         action: string,
         parameters: { [key: string]: any }
     }) => {
         console.log('worker message', msg);
         switch(msg.action) {
             case 'serverEnding': {
-                worker.emit('exit');
+                // worker.emit('exit');
+                await worker.terminate();
                 break;
             }
         }

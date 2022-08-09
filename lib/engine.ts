@@ -1,4 +1,5 @@
 import fs from "fs";
+import EventEmitter from "events";
 import {ChildProcess, ChildProcessWithoutNullStreams, spawn} from 'child_process';
 
 export interface Player {
@@ -32,7 +33,7 @@ class OptionFactory {
   }
 }
 
-export class EngineBridger {
+export class EngineBridger extends EventEmitter {
   startDir: string = ''
   teamPtr: number
   cmds: string[]
@@ -43,6 +44,7 @@ export class EngineBridger {
   engine: ChildProcess | null = null;
   
   constructor(startDir: string, cmds: Array<string>) {
+    super();
     this.teamPtr = 0;
     if (startDir === '' || startDir === undefined) startDir = process.cwd();
     else this.startDir = startDir;
@@ -247,25 +249,16 @@ export class EngineBridger {
         }
 
         this.engine.on('error', (error) => {
-        console.error(`error: ${error.message}`);
+          console.error(`error: ${error.message}`);
         });
 
         this.engine.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
+          console.log(`child process exited with code ${code}`);
+          this.emit('engineShutdown');
         });
 
         return true;
     }
-  }
-
-  /**
-   *
-   * @return {object} isalive
-   */
-  engineStatus() {
-    return {
-      isAlive: true,
-    };
   }
 }
 

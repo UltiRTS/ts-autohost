@@ -1,6 +1,6 @@
 import { EngineListener } from "./lib/listener";
 import { EngineBridger, Player } from "./lib/engine";
-import {parentPort,} from 'worker_threads'
+import {parentPort} from 'worker_threads'
 
 function getAllyTeamCount(parameters: {[key: string]: any}) {
     const teams= new Set();
@@ -26,6 +26,16 @@ parentPort?.on('message', (parameters: {
     const listener = new EngineListener(listenerPort);
     const engine = new EngineBridger(process.cwd(), [])
     const title = parameters.title;
+
+    engine.on('engineShutdown', () => {
+        parentPort?.postMessage({
+            action: 'serverEnding',
+            parameters: {
+                title
+            },
+        })
+        listener.close();
+    })
 
     listener.on('autohostMsg', (msg: {
         action: string,
