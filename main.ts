@@ -99,7 +99,16 @@ plmComm.on('plasmidRequest', async (msg: {
         }
         case 'midJoin': {
             const workerId = msg.parameters.id;
-            workerPool[workerId].postMessage(msg);
+            if(workerPool[workerId]) workerPool[workerId].postMessage(msg);
+            else {
+                plmComm.send2plasmid({
+                    action: 'joinRejected', 
+                    parameters: {
+                        title: msg.parameters.title,
+                        player: msg.parameters.playerName
+                    }
+                }) 
+            }
             break;
         }
     }

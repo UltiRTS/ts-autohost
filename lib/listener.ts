@@ -178,8 +178,10 @@ export class EngineListener extends EventEmitter {
     const token = parameters.token;
     const team = parameters.team;
 
+    const addr = this.server.address();
+
     this.server.send('/adduser ' +
-      playerName + ' ' + token + ' ' + isSpec + ' ' + team, this.port);
+      playerName + ' ' + token + ' ' + isSpec + ' ' + team, addr.port, addr.family);
   }
 
   close() {
