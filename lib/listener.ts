@@ -194,8 +194,8 @@ export class EngineListener extends EventEmitter {
 
     for(const clientID in this.clients) {
       const client = this.clients[clientID];
-      this.server.send('/adduser ' +
-        playerName + ' ' + token + ' ' + isSpec?'1':'0' + ' ' + team, client.port, client.addr);
+      const cmd = '/adduser ' + playerName + ' ' + token + ' ' + (isSpec?'1':'0') + ' ' + team;
+      this.server.send(cmd, client.port, client.addr);
     }
   }
 
