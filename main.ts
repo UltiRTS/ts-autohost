@@ -78,6 +78,15 @@ plmComm.on('plasmidRequest', async (msg: {
 
             const mapId = parameters.mapId;
             const mapInfo = await dntpComm.getMapUrlById(mapId);
+            if(mapInfo.map === '') {
+                plmComm.send2plasmid({
+                    action: 'mapNotFound',
+                    parameters: {
+                        title: parameters.title,
+                    }
+                })
+                return; 
+            }
             const downloadStatus = await downloadMap(mapInfo, mapDir)
             if(downloadStatus === false) {
                 console.log('map download failed');
