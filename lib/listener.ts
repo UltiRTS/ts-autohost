@@ -19,6 +19,12 @@ export class EngineListener extends EventEmitter {
     };
     server: dgram.Socket | null = null;
     port: number = 0
+    clients: {
+      [key:string]: {
+        addr: string
+        port: number
+      }
+    } = {}
 
   constructor(port: number) {
     super();
@@ -33,6 +39,12 @@ export class EngineListener extends EventEmitter {
       // emit back to hoster using eventEmitter
       // console.log('===============');
       // console.log(msg.length);
+
+      this.clients[rinfo.address + rinfo.port] = { 
+        addr: rinfo.address,
+        port: rinfo.port
+      }
+
       let playerNumber;
       switch (msg[0]) {
         case 0:
@@ -167,7 +179,9 @@ export class EngineListener extends EventEmitter {
   send2springEngine(things2send: string) {
     if(this.server === null) return;
 
-    this.server.send(things2send);
+    for(const clientID in this.clients) {
+      const client = this.clients[clientID];
+      this.server.send(things2send, client.port, client.addr); }
   }
 
   midJoin(parameters: {[key: string]: any}) {
@@ -178,10 +192,11 @@ export class EngineListener extends EventEmitter {
     const token = parameters.token;
     const team = parameters.team;
 
-    const addr = this.server.address();
-
-    this.server.send('/adduser ' +
-      playerName + ' ' + token + ' ' + isSpec + ' ' + team, addr.port, addr.family);
+    for(const clientID in this.clients) {
+      const client = this.clients[clientID];
+      this.server.send('/adduser ' +
+        playerName + ' ' + token + ' ' + isSpec + ' ' + team, client.port, client.addr);
+    }
   }
 
   close() {
