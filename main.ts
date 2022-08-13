@@ -94,19 +94,26 @@ plmComm.on('plasmidRequest', async (msg: {
             }
             parameters.map = mapInfo.map.map_name;
 
-            newGame(parameters);
+            newGame(msg);
+            break;
+        }
+        case 'midJoin': {
+            const workerId = msg.parameters.id;
+            workerPool[workerId].postMessage(msg);
             break;
         }
     }
 })
 
-const newGame = (parameters: {[key: string]: any}) => {
+const newGame = (msg: {[key: string]: any}) => {
+    console.log(msg)
+    const parameters = msg.parameters;
     const id = parameters.id;
     const worker = new Worker('./dist/hoster.js');
     workerPool[id] = worker;
 
     worker.on('online', () => {
-        worker.postMessage(parameters)
+        worker.postMessage(msg)
     })
 
     worker.on('message', async (msg: {

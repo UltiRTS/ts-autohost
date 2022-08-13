@@ -2,6 +2,27 @@ import { EngineListener } from "./lib/listener";
 import { EngineBridger, Player } from "./lib/engine";
 import {parentPort} from 'worker_threads'
 
+declare interface StartGameParams {
+    id: number,
+    title: string,
+    mgr: string,
+    team: { [key: string]: Player },
+    mapId: number,
+    aiHosters: number[],
+    map: string
+}
+
+declare interface MidJoinParams {
+    id: number
+    title: string
+    isSpec: boolean
+    team: string
+    playerName: string
+}
+
+let listener: EngineListener | null = null;
+let engine: EngineBridger | null = null;
+
 function getAllyTeamCount(parameters: {[key: string]: any}) {
     const teams= new Set();
     // eslint-disable-next-line guard-for-in
@@ -11,20 +32,12 @@ function getAllyTeamCount(parameters: {[key: string]: any}) {
     return teams.size;
 }
 
-parentPort?.on('message', (parameters: {
-    id: number,
-    title: string,
-    mgr: string,
-    team: { [key: string]: Player },
-    mapId: number,
-    aiHosters: number[],
-    map: string
-}) => {
+function startGame(parameters: StartGameParams) {
     const battlePort = 6000 + parameters.id;
     const listenerPort = 2000 + parameters.id;
 
-    const listener = new EngineListener(listenerPort);
-    const engine = new EngineBridger(process.cwd(), [])
+    listener = new EngineListener(listenerPort);
+    engine = new EngineBridger(process.cwd(), [])
     const title = parameters.title;
 
     engine.on('engineShutdown', () => {
@@ -34,7 +47,7 @@ parentPort?.on('message', (parameters: {
                 title
             },
         })
-        listener.close();
+        listener?.close();
     })
 
     listener.on('autohostMsg', (msg: {
@@ -44,8 +57,8 @@ parentPort?.on('message', (parameters: {
         if(msg.action === 'autohostStarted') {
             parameters.aiHosters = [0];
             console.log(parameters.map);
-            engine.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters);
-            engine.launchGame()
+            engine?.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters);
+            engine?.launchGame()
         }
     })
 
@@ -64,12 +77,45 @@ parentPort?.on('message', (parameters: {
             }
             case 'serverEnding': {
                 parentPort?.postMessage(msg);
-                listener.close();
+                listener?.close();
                 break;
             }
         }
 
     })
+}
+
+function modJoin(parameters: MidJoinParams) {
+    console.log(parameters);
+    if(listener) {
+        listener.midJoin(parameters);
+    }
+}
+
+parentPort?.on('message', (msg : {
+    action: string
+    parameters: StartGameParams | MidJoinParams
+}) => {
+
+    switch(msg.action) {
+        case 'startGame': {
+            const parameters = msg.parameters as StartGameParams;
+            startGame(parameters);
+            break;
+        }
+        case 'midJoin': {
+            const parameters = msg.parameters as MidJoinParams
+            modJoin(parameters);
+            parentPort?.postMessage({
+                action: 'midJoined',
+                parameters: {
+                    title: parameters.title,
+                    player: parameters.playerName,
+                }
+            })
+            break;
+        }
+    }
 })
 
 

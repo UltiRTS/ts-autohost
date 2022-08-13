@@ -18,9 +18,11 @@ export class EngineListener extends EventEmitter {
       2: 'state not changed',
     };
     server: dgram.Socket | null = null;
+    port: number = 0
 
   constructor(port: number) {
-      super();
+    super();
+    this.port = port;
     this.server = dgram.createSocket('udp4');
     this.server.on('error', (err) => {
       console.log(`server error:\n${err.stack}`);
@@ -177,7 +179,7 @@ export class EngineListener extends EventEmitter {
     const team = parameters.team;
 
     this.server.send('/adduser ' +
-      playerName + ' ' + token + ' ' + isSpec + ' ' + team);
+      playerName + ' ' + token + ' ' + isSpec + ' ' + team, this.port);
   }
 
   close() {
