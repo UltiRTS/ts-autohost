@@ -111,6 +111,21 @@ plmComm.on('plasmidRequest', async (msg: {
             }
             break;
         }
+
+        case 'killEngine': {
+            const workerId = msg.parameters.id;
+            if(workerPool[workerId]) {
+                workerPool[workerId].postMessage(msg);
+            } else {
+                plmComm.send2plasmid({
+                    action: 'killEngineRejected', 
+                    parameters: {
+                        title: msg.parameters.title,
+                    }
+                }) 
+            }
+            break;
+        }
     }
 })
 

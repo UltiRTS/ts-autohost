@@ -199,6 +199,15 @@ export class EngineListener extends EventEmitter {
     }
   }
 
+  killBySignal() {
+    if(this.server === null) return;
+    const cmd = '/kill';
+    for(const clientID in this.clients) {
+      const client = this.clients[clientID];
+      this.server.send(cmd, client.port, client.addr);
+    }
+  }
+
   close() {
     if(this.server === null) return;
 

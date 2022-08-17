@@ -115,6 +115,16 @@ parentPort?.on('message', (msg : {
             })
             break;
         }
+        case 'killEngine': {
+            const parameters = msg.parameters
+            listener?.killBySignal();
+            parentPort?.postMessage({
+                action: 'killEngineSignalSent',
+                parameters: {
+                    title: parameters.title,
+                }
+            })
+        }
     }
 })
 
