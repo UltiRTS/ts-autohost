@@ -51,7 +51,7 @@ export class EngineBridger extends EventEmitter {
     this.cmds = cmds;
   }
 
-  scriptGen(hostPort: number, battlePort: number, players: {[key:string]: Player}, numTeams: number, mapName: string, aiHosters: number[]) {
+  scriptGen(hostPort: number, battlePort: number, players: {[key:string]: Player}, numTeams: number, mapName: string, aiHosters: number[], mod: string = 'mod.sdd') {
     this.hostPort = hostPort;
     this.battlePort = battlePort;
     this.players = players;
@@ -170,7 +170,8 @@ export class EngineBridger extends EventEmitter {
     // GAME SELECTOR MODULE
 
     console.log('game type is zk');
-    game.addFromDict({GameType: 'mod.sdd'});
+    // game.addFromDict({GameType: 'mod.sdd'});
+    game.addFromDict({GameType: mod});
 
 
     // startposi selector MODULE

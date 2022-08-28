@@ -9,7 +9,8 @@ declare interface StartGameParams {
     team: { [key: string]: Player },
     mapId: number,
     aiHosters: number[],
-    map: string
+    map: string,
+    mod: string
 }
 
 declare interface MidJoinParams {
@@ -57,7 +58,7 @@ function startGame(parameters: StartGameParams) {
         if(msg.action === 'autohostStarted') {
             parameters.aiHosters = [0];
             console.log(parameters.map);
-            engine?.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters);
+            engine?.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters, parameters.mod);
             engine?.launchGame()
         }
     })
