@@ -81,6 +81,10 @@ function startGame(parameters: StartGameParams) {
                 listener?.close();
                 break;
             }
+            case 'defeat': {
+                parentPort?.postMessage(msg);
+                break;
+            }
         }
 
     })
