@@ -73,6 +73,8 @@ function startGame(parameters: StartGameParams) {
         switch(msg.action) {
             case 'serverStarted': {
                 msg.parameters.port = battlePort;
+                console.log(parameters.id);
+                msg.parameters.id = parameters.id;
                 parentPort?.postMessage(msg);
                 break;
             }
