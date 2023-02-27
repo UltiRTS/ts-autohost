@@ -183,7 +183,8 @@ export class EngineBridger extends EventEmitter {
     console.log('autohost is   hosttype=SPADS;');
 
     // autohost ip MODULE
-    game.addFromDict({'HostIP': ''});
+    // Force ipv4
+    game.addFromDict({'HostIP': '0.0.0.0'});
     console.log('AUTOHOST IP is HostIP=;');
 
     // host port MODULE
@@ -219,7 +220,7 @@ export class EngineBridger extends EventEmitter {
     // MAP OPTIOn
     const mapop = new OptionFactory('MAPOPTIONS');
     game.addFromInstance(mapop);
-
+    console.log("game.toString() = ", game.toString())
     fs.writeFileSync('/tmp/battle' + this.battlePort + '.txt', game.toString());
   }
 
