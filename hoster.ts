@@ -11,6 +11,7 @@ declare interface StartGameParams {
     aiHosters: number[],
     map: string,
     mod: string
+    bettlePortOffset: number,
 }
 
 declare interface MidJoinParams {
@@ -33,8 +34,10 @@ function getAllyTeamCount(parameters: {[key: string]: any}) {
     return teams.size;
 }
 
+
+
 function startGame(parameters: StartGameParams) {
-    const battlePort = 6000 + parameters.id;
+    const battlePort = 6000 + parameters.bettlePortOffset;
     const listenerPort = 2000 + parameters.id;
 
     listener = new EngineListener(listenerPort);

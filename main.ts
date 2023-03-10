@@ -35,7 +35,7 @@ const plmComm = new PlasmidCommunicator({
     host: plasmidServer.host,
     port: plasmidServer.port
 });
-
+const id2portMapping : {[key: number]: number} = {}
 const workerPool: {
     [key: number]: Worker
 } = {}
@@ -129,19 +129,30 @@ plmComm.on('plasmidRequest', async (msg: {
     }
 })
 
+function create_port_from_id(id: number) {
+  if (id in id2portMapping) {
+    return id2portMapping[id]
+  } 
+
+  const offset = Object.keys(id2portMapping).length
+  id2portMapping[id] = offset
+
+  return offset 
+}
+
 const newGame = (msg: {[key: string]: any}) => {
     console.log(msg)
     const parameters = msg.parameters;
     const id = parameters.id;
     const workerPath = process.env.NODE_ENV === "development" ? './hoster.ts' : './hoster.js'
-
+    let msgWithBattlePort = {...msg, battlePortOffset: create_port_from_id(id)}
     const worker = process.env.NODE_ENV === "development" ? new Worker("./hoster.ts", {
         execArgv: ['-r', 'ts-node/register/transpile-only']
     }): new Worker('./hoster.js');
     workerPool[id] = worker;
 
     worker.on('online', () => {
-        worker.postMessage(msg)
+        worker.postMessage(msgWithBattlePort)
     })
 
     worker.on('message', async (msg: {
