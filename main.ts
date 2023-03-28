@@ -141,18 +141,19 @@ function create_port_from_id(id: number) {
 }
 
 const newGame = (msg: {[key: string]: any}) => {
-    console.log(msg)
-    const parameters = msg.parameters;
+    let parameters = msg.parameters;
     const id = parameters.id;
     const workerPath = process.env.NODE_ENV === "development" ? './hoster.ts' : './hoster.js'
-    let msgWithBattlePort = {...msg, battlePortOffset: create_port_from_id(id)}
     const worker = process.env.NODE_ENV === "development" ? new Worker("./hoster.ts", {
         execArgv: ['-r', 'ts-node/register/transpile-only']
     }): new Worker('./hoster.js');
     workerPool[id] = worker;
 
     worker.on('online', () => {
-        worker.postMessage(msgWithBattlePort)
+    	parameters = { ...parameters, battlePortOffset: create_port_from_id(id) }
+    	console.log("woeker online");
+	msg.parameters = parameters; 
+        worker.postMessage(msg)
     })
 
     worker.on('message', async (msg: {

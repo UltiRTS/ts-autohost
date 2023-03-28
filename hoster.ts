@@ -37,8 +37,8 @@ function getAllyTeamCount(parameters: {[key: string]: any}) {
 
 
 function startGame(parameters: StartGameParams) {
-    const battlePort = 6000 + parameters.bettlePortOffset;
-    const listenerPort = 2000 + parameters.id;
+    const battlePort = 7000 + parameters.battlePortOffset;
+    const listenerPort = 3000 + parameters.battlePortOffset;
 
     listener = new EngineListener(listenerPort);
     engine = new EngineBridger(process.cwd(), [])
@@ -61,6 +61,7 @@ function startGame(parameters: StartGameParams) {
         if(msg.action === 'autohostStarted') {
             parameters.aiHosters = [0];
             console.log(parameters.map);
+	    console.log("Script GEN: " , msg, battlePort);
             engine?.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters, parameters.mod);
             engine?.launchGame()
         }
