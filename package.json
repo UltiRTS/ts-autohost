@@ -6,7 +6,8 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development nodemon main.ts",
-    "start": "tsc && node dist/main.js"
+    "build": "tsc",
+    "start": "node dist/main.js"
   },
   "dependencies": {
     "@types/node": "^18.6.2",

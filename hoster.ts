@@ -11,7 +11,7 @@ declare interface StartGameParams {
     aiHosters: number[],
     map: string,
     mod: string
-    bettlePortOffset: number,
+    battlePortOffset: number,
 }
 
 declare interface MidJoinParams {
