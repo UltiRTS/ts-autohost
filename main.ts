@@ -1,3 +1,5 @@
+/** @format */
+
 // sample input
 // {
 //   id: 0,
@@ -24,24 +26,25 @@
 //   map: 'Red Comet Remake 1.7'
 // }
 
-import { dntp, mapDir, plasmidServer } from "./config";
-import { PlasmidCommunicator } from "./lib/network";
-import {Worker} from 'worker_threads'
-import {downloadMap} from './lib/network';
-import { DntpCommunicator } from "./lib/dntp";
+import { dntp, mapDir, plasmidServer } from './config';
+import { PlasmidCommunicator } from './lib/network';
+import { Worker } from 'worker_threads';
+import { downloadMap } from './lib/network';
+import { DntpCommunicator } from './lib/dntp';
+import PortPool from './lib/portPool';
 
 const dntpComm = new DntpCommunicator(dntp, 'engine/maps');
 const plmComm = new PlasmidCommunicator({
-    host: plasmidServer.host,
-    port: plasmidServer.port
+  host: plasmidServer.host,
+  port: plasmidServer.port,
 });
-const id2portMapping : {[key: number]: number} = {}
+const portPool = new PortPool({ numPorts: 1000, startPort: 3000 });
 const workerPool: {
-    [key: number]: Worker
-} = {}
+  [key: number]: Worker;
+} = {};
 
 const infoPool: {
-    [key: number]: any
+  [key: number]: any;
 } = {};
 
 // example request
@@ -56,124 +59,122 @@ const infoPool: {
 //     aiHosters: []
 //   }
 // }
-plmComm.on('plasmidRequest', async (msg: {
-    action: string
+plmComm.on(
+  'plasmidRequest',
+  async (msg: {
+    action: string;
     parameters: {
-        [key: string]: any
+      [key: string]: any;
+    };
+  }) => {
+    switch (msg.action) {
+      case 'startGame': {
+        const parameters = msg.parameters;
+        if (workerPool[parameters.id]) {
+          plmComm.send2plasmid({
+            action: 'workerExists',
+            parameters: {
+              title: parameters.title,
+            },
+          });
+          return;
+        }
+        infoPool[parameters.id] = msg;
+
+        const mapId = parameters.mapId;
+        const mapInfo = await dntpComm.getMapUrlById(mapId);
+        if (mapInfo.map === '') {
+          plmComm.send2plasmid({
+            action: 'mapNotFound',
+            parameters: {
+              title: parameters.title,
+            },
+          });
+          return;
+        }
+        const downloadStatus = await downloadMap(mapInfo, mapDir);
+        if (downloadStatus === false) {
+          console.log('map download failed');
+          return;
+        }
+        parameters.map = mapInfo.map.map_name;
+
+        newGame(msg);
+        break;
+      }
+      case 'midJoin': {
+        const workerId = msg.parameters.id;
+        if (workerPool[workerId]) workerPool[workerId].postMessage(msg);
+        else {
+          plmComm.send2plasmid({
+            action: 'joinRejected',
+            parameters: {
+              title: msg.parameters.title,
+              player: msg.parameters.playerName,
+            },
+          });
+        }
+        break;
+      }
+
+      case 'killEngine': {
+        const workerId = msg.parameters.id;
+        if (workerPool[workerId]) {
+          workerPool[workerId].postMessage(msg);
+        } else {
+          plmComm.send2plasmid({
+            action: 'killEngineRejected',
+            parameters: {
+              title: msg.parameters.title,
+            },
+          });
+        }
+        break;
+      }
     }
-}) => {
-    switch(msg.action) {
-        case 'startGame': {
-            const parameters = msg.parameters;
-            if(workerPool[parameters.id]) {
-                plmComm.send2plasmid({
-                    action: 'workerExists',
-                    parameters: {
-                        title: parameters.title,
-                    }
-                })
-                return;
-            }
-            infoPool[parameters.id] = msg;
+  }
+);
 
-            const mapId = parameters.mapId;
-            const mapInfo = await dntpComm.getMapUrlById(mapId);
-            if(mapInfo.map === '') {
-                plmComm.send2plasmid({
-                    action: 'mapNotFound',
-                    parameters: {
-                        title: parameters.title,
-                    }
-                })
-                return; 
-            }
-            const downloadStatus = await downloadMap(mapInfo, mapDir)
-            if(downloadStatus === false) {
-                console.log('map download failed');
-                return;
-            }
-            parameters.map = mapInfo.map.map_name;
+const newGame = (msg: { [key: string]: any }) => {
+  let parameters = msg.parameters;
+  const id = parameters.id;
+  const workerPath =
+    process.env.NODE_ENV === 'development' ? './hoster.ts' : './hoster.js';
+  const worker =
+    process.env.NODE_ENV === 'development'
+      ? new Worker('./hoster.ts', {
+          execArgv: ['-r', 'ts-node/register/transpile-only'],
+        })
+      : new Worker('./hoster.js');
+  workerPool[id] = worker;
 
-            newGame(msg);
-            break;
-        }
-        case 'midJoin': {
-            const workerId = msg.parameters.id;
-            if(workerPool[workerId]) workerPool[workerId].postMessage(msg);
-            else {
-                plmComm.send2plasmid({
-                    action: 'joinRejected', 
-                    parameters: {
-                        title: msg.parameters.title,
-                        player: msg.parameters.playerName
-                    }
-                }) 
-            }
-            break;
-        }
+  worker.on('online', () => {
+    const offset = portPool.getOffset(id);
+    parameters = { ...parameters, battlePortOffset: offset };
+    console.log('woeker online');
+    msg.parameters = parameters;
+    worker.postMessage(msg);
+  });
 
-        case 'killEngine': {
-            const workerId = msg.parameters.id;
-            if(workerPool[workerId]) {
-                workerPool[workerId].postMessage(msg);
-            } else {
-                plmComm.send2plasmid({
-                    action: 'killEngineRejected', 
-                    parameters: {
-                        title: msg.parameters.title,
-                    }
-                }) 
-            }
-            break;
+  worker.on(
+    'message',
+    async (msg: { action: string; parameters: { [key: string]: any } }) => {
+      console.log('worker message', msg);
+      switch (msg.action) {
+        case 'serverEnding': {
+          // worker.emit('exit');
+          await worker.terminate();
+          break;
         }
+      }
+
+      plmComm.send2plasmid(msg);
     }
-})
+  );
 
-function create_port_from_id(id: number) {
-  if (id in id2portMapping) {
-    return id2portMapping[id]
-  } 
-
-  const offset = Object.keys(id2portMapping).length
-  id2portMapping[id] = offset
-
-  return offset 
-}
-
-const newGame = (msg: {[key: string]: any}) => {
-    let parameters = msg.parameters;
-    const id = parameters.id;
-    const workerPath = process.env.NODE_ENV === "development" ? './hoster.ts' : './hoster.js'
-    const worker = process.env.NODE_ENV === "development" ? new Worker("./hoster.ts", {
-        execArgv: ['-r', 'ts-node/register/transpile-only']
-    }): new Worker('./hoster.js');
-    workerPool[id] = worker;
-
-    worker.on('online', () => {
-    	parameters = { ...parameters, battlePortOffset: create_port_from_id(id) }
-    	console.log("woeker online");
-	msg.parameters = parameters; 
-        worker.postMessage(msg)
-    })
-
-    worker.on('message', async (msg: {
-        action: string,
-        parameters: { [key: string]: any }
-    }) => {
-        console.log('worker message', msg);
-        switch(msg.action) {
-            case 'serverEnding': {
-                // worker.emit('exit');
-                await worker.terminate();
-                break;
-            }
-        }
-
-        plmComm.send2plasmid(msg)
-    })
-
-    worker.on('exit', () => {
-        delete workerPool[id];
-        delete infoPool[id];
-    })
-} 
+  worker.on('exit', () => {
+    delete workerPool[id];
+    portPool.freePort(id);
+    delete infoPool[id];
+  });
+};
