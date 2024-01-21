@@ -32,6 +32,7 @@ import { Worker } from 'worker_threads';
 import { downloadMap } from './lib/network';
 import { DntpCommunicator } from './lib/dntp';
 import PortPool from './lib/portPool';
+import { PlasmidStartGameMessage } from './lib/typings';
 
 const dntpComm = new DntpCommunicator(dntp, 'engine/maps');
 const plmComm = new PlasmidCommunicator({
@@ -47,93 +48,71 @@ const infoPool: {
   [key: number]: any;
 } = {};
 
-// example request
-// {
-//   action: 'startGame',
-//   parameters: {
-//     id: 0,
-//     title: 'test',
-//     mgr: '::ffff:127.0.0.1',
-//     team: { test: [Object], AI01: [Object] },
-//     mapId: 1,
-//     aiHosters: []
-//   }
-// }
-plmComm.on(
-  'plasmidRequest',
-  async (msg: {
-    action: string;
-    parameters: {
-      [key: string]: any;
-    };
-  }) => {
-    switch (msg.action) {
-      case 'startGame': {
-        const parameters = msg.parameters;
-        if (workerPool[parameters.id]) {
-          plmComm.send2plasmid({
-            action: 'workerExists',
-            parameters: {
-              title: parameters.title,
-            },
-          });
-          return;
-        }
-        infoPool[parameters.id] = msg;
-
-        const mapId = parameters.mapId;
-        const mapInfo = await dntpComm.getMapUrlById(mapId);
-        if (mapInfo.map === '') {
-          plmComm.send2plasmid({
-            action: 'mapNotFound',
-            parameters: {
-              title: parameters.title,
-            },
-          });
-          return;
-        }
-        const downloadStatus = await downloadMap(mapInfo, mapDir);
-        if (downloadStatus === false) {
-          console.log('map download failed');
-          return;
-        }
-        parameters.map = mapInfo.map.map_name;
-
-        newGame(msg);
-        break;
-      }
-      case 'midJoin': {
-        const workerId = msg.parameters.id;
-        if (workerPool[workerId]) workerPool[workerId].postMessage(msg);
-        else {
-          plmComm.send2plasmid({
-            action: 'joinRejected',
-            parameters: {
-              title: msg.parameters.title,
-              player: msg.parameters.playerName,
-            },
-          });
-        }
-        break;
-      }
-
-      case 'killEngine': {
-        const workerId = msg.parameters.id;
-        if (workerPool[workerId]) {
-          workerPool[workerId].postMessage(msg);
-        } else {
-          plmComm.send2plasmid({
-            action: 'killEngineRejected',
-            parameters: {
-              title: msg.parameters.title,
-            },
-          });
-        }
-        break;
-      }
-    }
+plmComm.on('startGame', async (msg) => {
+  const parameters = msg.parameters;
+  if (workerPool[parameters.id]) {
+    plmComm.send2plasmid({
+      action: 'workerExists',
+      parameters: {
+        title: parameters.title,
+      },
+    });
+    return;
   }
-);
+  infoPool[parameters.id] = msg;
+
+  const mapId = parameters.mapId;
+  const mapInfo = await dntpComm.getMapUrlById(mapId);
+  if (mapInfo.map === '') {
+    plmComm.send2plasmid({
+      action: 'mapNotFound',
+      parameters: {
+        title: parameters.title,
+      },
+    });
+    return;
+  }
+  const downloadStatus = await downloadMap(mapInfo, mapDir);
+  if (downloadStatus === false) {
+    console.log('map download failed');
+    return;
+  }
+  parameters.map = mapInfo.map.map_name;
+
+  newGame(msg);
+});
+
+plmComm.on('midJoin', (msg) => {
+  const workerId = msg.parameters.id;
+  if (workerPool[workerId]) workerPool[workerId].postMessage(msg);
+  else {
+    plmComm.send2plasmid({
+      action: 'joinRejected',
+      parameters: {
+        title: msg.parameters.title,
+        player: msg.parameters.playerName,
+      },
+    });
+  }
+});
+
+plmComm.on('killEngine', (msg) => {
+  const workerId = msg.parameters.id;
+  if (workerPool[workerId]) {
+    workerPool[workerId].postMessage(msg);
+  } else {
+    plmComm.send2plasmid({
+      action: 'killEngineRejected',
+      parameters: {
+        title: msg.parameters.title,
+      },
+    });
+  }
+});
+
+plmComm.on('error', (msg) => {
+  console.log('plasmid error message:', msg);
+});
 
 const newGame = (msg: { [key: string]: any }) => {
   let parameters = msg.parameters;
