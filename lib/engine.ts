@@ -106,8 +106,8 @@ export class EngineBridger extends EventEmitter {
       if (this.players[id]['isAI']) {
         const ai = new OptionFactory('AI' + this.players[id]['index']);
         ai.addFromDict({
-          ShortName: '105CircuitAIBrutal64',
-          Name: 'GPT-3',
+          ShortName: 'GPT4o',
+          Name: 'GPT4o',
           Team: this.players[id]['index'],
           Host: aiHosters[AI % aiHosterLen] || 0,
         });
