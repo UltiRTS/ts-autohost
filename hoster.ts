@@ -12,6 +12,7 @@ declare interface StartGameParams {
     map: string,
     mod: string
     battlePortOffset: number,
+    modoptions: {[key:string]: string}
 }
 
 declare interface MidJoinParams {
@@ -62,7 +63,7 @@ function startGame(parameters: StartGameParams) {
             parameters.aiHosters = [0];
             console.log(parameters.map);
 	    console.log("Script GEN: " , msg, battlePort);
-            engine?.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters, parameters.mod);
+            engine?.scriptGen(listenerPort, battlePort, parameters.team, getAllyTeamCount(parameters), parameters.map, parameters.aiHosters, parameters.mod, parameters.modoptions);
             engine?.launchGame()
         }
     })
