@@ -214,7 +214,7 @@ export class EngineBridger extends EventEmitter {
     game.addFromInstance(restrict);
 
     // MOD OPTION
-    const modeoptions = new OptionFactory('MODEOPTIONS');
+    const modeoptions = new OptionFactory('MODOPTIONS');
     modeoptions.addFromDict(modoptions)
     game.addFromInstance(modeoptions);
 
