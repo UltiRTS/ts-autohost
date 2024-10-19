@@ -34,11 +34,22 @@ export interface PlasmidErrorMessage {
   message: string;
 }
 
+export interface PlasmidCMDMessage {
+  action: 'cmd';
+  parameters: {
+    id: number;
+    title: string;
+    cmd: string;
+    [key: string]: any;
+  };
+}
+
 export type PlasmidMessage =
   | PlasmidStartGameMessage
   | PlasmidMidJoinMessage
   | PlasmidKillEngineMessage
-  | PlasmidErrorMessage;
+  | PlasmidErrorMessage
+  | PlasmidCMDMessage
 
 export type PlasmidEventsMap = {
   [K in PlasmidMessage as K['action']]: K;

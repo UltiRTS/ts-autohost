@@ -50,6 +50,10 @@ export class PlasmidCommunicator extends EventEmitter<PlasmidEventsMap> {
           mgrSelf.emit("error", msg);
           break;
         }
+        case "cmd": {
+          mgrSelf.emit("cmd", msg);
+          break
+        }
 
         default: {
           const exhaustiveCheck: never = msg;

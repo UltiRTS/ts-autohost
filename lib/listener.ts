@@ -176,12 +176,13 @@ export class EngineListener extends EventEmitter {
     console.log(`server bound to port ${port}`);
   }
 
-  send2springEngine(things2send: string) {
+  cmd(things2send: string) {
     if(this.server === null) return;
 
     for(const clientID in this.clients) {
       const client = this.clients[clientID];
-      this.server.send(things2send, client.port, client.addr); }
+      this.server.send(things2send, client.port, client.addr); 
+    }
   }
 
   midJoin(parameters: {[key: string]: any}) {

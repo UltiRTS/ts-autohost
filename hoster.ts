@@ -2,6 +2,12 @@ import { EngineListener } from "./lib/listener";
 import { EngineBridger, Player } from "./lib/engine";
 import {parentPort} from 'worker_threads'
 
+declare interface CMDParams {
+    id: number
+    title: string
+    cmd: string
+}
+
 declare interface StartGameParams {
     id: number,
     title: string,
@@ -21,6 +27,10 @@ declare interface MidJoinParams {
     isSpec: boolean
     team: string
     playerName: string
+}
+
+declare interface KillEngineParams {
+    title: string
 }
 
 let listener: EngineListener | null = null;
@@ -106,7 +116,7 @@ function modJoin(parameters: MidJoinParams) {
 
 parentPort?.on('message', (msg : {
     action: string
-    parameters: StartGameParams | MidJoinParams
+    parameters: StartGameParams | MidJoinParams | CMDParams | KillEngineParams
 }) => {
 
     switch(msg.action) {
@@ -128,7 +138,7 @@ parentPort?.on('message', (msg : {
             break;
         }
         case 'killEngine': {
-            const parameters = msg.parameters
+            const parameters = msg.parameters as KillEngineParams
             listener?.killBySignal();
             parentPort?.postMessage({
                 action: 'killEngineSignalSent',
@@ -136,6 +146,18 @@ parentPort?.on('message', (msg : {
                     title: parameters.title,
                 }
             })
+            break
+        }
+        case 'cmd': {
+            const parameters = msg.parameters as CMDParams
+            listener?.cmd(parameters.cmd);
+            parentPort?.postMessage({
+                action: 'cmd',
+                parameters: {
+                    title: parameters.title,
+                }
+            })
+            break
         }
     }
 })
